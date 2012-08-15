@@ -1,7 +1,8 @@
 {
-  "name": "affinity"
-, "version": "0.0.1"
-, "dependencies": {
-    "express": "latest"
+  "name": "affinity",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "latest",
+    "coffee-script": "latest"
   }
 }
