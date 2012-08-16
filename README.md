@@ -1,4 +1,4 @@
-=== Planned: ===
+=== Planned ===
  * Emitters
  * Custom Urls?
  * Hooks?
@@ -14,7 +14,10 @@ npm install -g jasmine-node
 npm install (in dir)
 
 To run:
-coffee index.coffee
+coffee index
 
 To test:
 jasmine-node --coffee tests
+
+==== Links ====
+ * http://pivotal.github.com/jasmine/
