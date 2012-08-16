@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "express": "latest",
-    "coffee-script": "latest"
+    "coffee-script":"latest",
+    "jasmine-node": "latest"
   }
 }

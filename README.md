@@ -7,5 +7,14 @@ Early stages!
 
 
 === DEV ===
+Setup:
+*install noode*
+npm install -g coffee-script
+npm install -g jasmine-node
+npm install (in dir)
+
 To run:
-node node_modules\coffee-script\bin\coffee index.coffee
+coffee index.coffee
+
+To test:
+jasmine-node --coffee tests
