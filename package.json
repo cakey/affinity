@@ -2,6 +2,7 @@
   "name": "affinity",
   "version": "0.0.1",
   "dependencies": {
+    "express": "latest",
     "neo4j": "latest",
     "coffee-script":"latest",
     "jasmine-node": "latest"
