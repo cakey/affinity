@@ -1,9 +1,11 @@
 http = require 'http'
 neo4j = require 'neo4j'
 express = require 'express'
+fs = require 'fs'
 
-exports.serve = (entities) ->
-    db = new neo4j.GraphDatabase 'http://localhost:7474'
+String::endsWith = (str) -> @match(new RegExp "#{str}$")
+
+create = (schema) ->
     app = express()
                    
     callback = (err, result) ->
@@ -15,14 +17,14 @@ exports.serve = (entities) ->
                     
     app.param 'node_type', (req, res, next, node_type) ->
         console.log "checking node type"
-        if node_type of entities.nodes
+        if node_type of schema.nodes
             next()
         else
             res.send 400, "wrong node type !"
                     
     app.param 'edge_type', (req, res, next, edge_type) ->
         console.log "checking edge type"
-        if edge_type of entities.edges
+        if edge_type of schema.edges
             next()
         else
             res.send 400, "wrong edge type !"
@@ -36,11 +38,37 @@ exports.serve = (entities) ->
     app.get '/:node_type/:id/:edge_type', (req, res) ->
         res.send "getting the #{req.params.edge_type}s of #{req.params.node_type} ##{req.params.id}!"
         
-        
+    # the root address should return the schema
+    app.get '/', (req, res) ->
+        res.json schema
+     
     app.all '*', (req, res) ->
         res.send 400, "didnt match #{req.url}"
-
-    app.listen 8080
+    
+    return app
+    
+serve = (schema, port) ->
+    app = create schema
+    if not port?
+        port = 3000
+    console.log "starting on port #{port}!"
+    db = new neo4j.GraphDatabase 'http://localhost:7474'
+    app.listen port
+    
+if not module.parent
+    affinity_spec_file = process.argv[2]
+    if not affinity_spec_file.endsWith ".affinity"
+        affinity_spec_file += ".affinity"
+    fileContents = fs.readFileSync affinity_spec_file, 'utf8'
+    schema = JSON.parse fileContents 
+    port = process.argv[3]
+    serve schema, port
+else
+    exports.create = create
+    exports.serve = serve
+    
+    
+    
     
 test = () ->
     server = http.createServer (req, res) ->

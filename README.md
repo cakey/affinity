@@ -14,10 +14,12 @@ npm install -g jasmine-node
 npm install (in dir)
 
 To run:
-coffee index
+coffee affinity [schema] ([port])
 
 To test:
-jasmine-node --coffee tests
+npm test
 
 ==== Links ====
- * http://pivotal.github.com/jasmine/
+ * https://github.com/visionmedia/supertest
+ * http://expressjs.com/api.html
+ * https://npmjs.org/doc/scripts.html
