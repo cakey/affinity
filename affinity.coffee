@@ -2,11 +2,13 @@ http = require 'http'
 neo4j = require 'neo4j'
 express = require 'express'
 fs = require 'fs'
+database = require('./graph').memory
 
 String::endsWith = (str) -> @match(new RegExp "#{str}$")
 
 create = (schema) ->
     app = express()
+    graph = database()
                    
     callback = (err, result) ->
         console.log "callback"
@@ -20,7 +22,7 @@ create = (schema) ->
         if node_type of schema.nodes
             next()
         else
-            res.send 400, "wrong node type !"
+            res.json 400, {"error":"non existent node type"}
                     
     app.param 'edge_type', (req, res, next, edge_type) ->
         console.log "checking edge type"
@@ -32,9 +34,25 @@ create = (schema) ->
     app.get '/:node_type', (req, res) ->
         res.send "get all the #{req.params.node_type}s!"
         
-    app.get '/:node_type/:id', (req, res) -> 
-        res.send "get the #{req.params.node_type} with id #{req.params.id}!"
+    app.post '/:node_type', (req, res) ->
+        node = graph.create_node req.params.node_type
+        res.json {data: node}
         
+    app.get '/:node_type/:id', (req, res) -> 
+        console.log "get the #{req.params.node_type} with id #{req.params.id}!"
+        node = graph.get_node req.params.id
+        if node?
+            res.json {data: node}
+        else
+            res.json 404, {error: "#{req.params.node_type} with id #{req.params.id} was not found"}
+    
+    app.delete '/:node_type/:id', (req, res) ->
+        deleted = graph.delete_node req.params.id
+        if deleted
+            res.json 204, {data: {} }
+        else 
+            res.json 404, {error: "#{req.params.node_type} with id #{req.params.id} was not found"}
+    
     app.get '/:node_type/:id/:edge_type', (req, res) ->
         res.send "getting the #{req.params.edge_type}s of #{req.params.node_type} ##{req.params.id}!"
         
@@ -43,6 +61,7 @@ create = (schema) ->
         res.json schema
      
     app.all '*', (req, res) ->
+        console.log "didnt match #{req.url}"
         res.send 400, "didnt match #{req.url}"
     
     return app
@@ -66,58 +85,3 @@ if not module.parent
 else
     exports.create = create
     exports.serve = serve
-    
-    
-    
-    
-test = () ->
-    server = http.createServer (req, res) ->
-
-        console.log req.method, req.url
-        
-        headers = {"Content-Type": "application/json"}
-       
-        cleaned_url = req.url.split("/")[1..]
-        console.log cleaned_url
-        node_type = cleaned_url[0]
-        if node_type of entities.nodes
-            id = cleaned_url[1]
-            if cleaned_url[2] of entities.edges
-                res.writeHead 200
-                res.end "hit node/#{id}/edge"
-            
-            if req.method == "GET"
-                if id?
-                    db.getNodeById id, (err, result) ->
-                        console.log err
-                        if err
-                            if err.code is "ECONNREFUSED"
-                                res.writeHead 500
-                                res.end "could not connect to db!"
-                            else
-                                res.writeHead 404
-                                res.end "#{node_type} with id #{id} not found"
-                        else
-                            console.log "success?"
-                            # console.log result
-                            res.writeHead 200
-                            res.end JSON.stringify result.data
-                else
-                    db.getIndexedNodes "nodes", "type", "user", callback
-                    res.writeHead 200
-                    res.end "all the #{node_type}s!"
-            else if req.method is "POST"
-                console.log req.body
-                # node = db.createNode({'hello': 'world'})
-                # node.save(callback)
-            else
-                res.writeHead 400
-                res.end "dont understand that method"
-            
-        else
-            res.writeHead 200, headers
-            res.end JSON.stringify entities
-        console.log "\n"
-        
-
-    server.listen 8080
