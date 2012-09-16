@@ -19,7 +19,7 @@ describe 'Given a one node schema,', ->
     describe 'GETing /node_not_in_schema', ->
         it 'should fail gracefully, with key error.', (done) ->
             request(app)
-                .get("/node_not_in_schema")
+                .get("/node_not_in_schema/4")
                 .end (err, res) ->
                     expect(res.status).to.equal 400
                     expect(res.body).to.include.keys "error"

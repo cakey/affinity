@@ -15,26 +15,30 @@ create = (schema) ->
     
     # config
     app.use(express.bodyParser());
-                    
+    
+    app.use (err, req, res, next) ->
+        console.error err.stack
+        res.send 500, 'Something broke!'
+
     app.param 'node_type', (req, res, next, node_type) ->
         if node_type of schema.nodes
             next()
         else
-            res.json 400, {"error":"non existent node type"}
+            res.json 400, "error": "non existent node type"
                     
     app.param 'edge_type', (req, res, next, edge_type) ->
         console.log "checking edge type"
         if edge_type of schema.edges
             next()
         else
-            res.send 400, "wrong edge type !"
+            res.send 400, "error": "non existent edge type"
             
     # ---
     
     validate = (node, node_type, res) ->
         for expected_property, details of schema.nodes[node_type]
             if not node? or expected_property not of node
-                res.json 400, {error: "missing property: #{expected_property}"} 
+                res.json 400, error: "missing property: #{expected_property}"
                 return false
         return true
     
@@ -55,24 +59,48 @@ create = (schema) ->
         if node?
             res.json data: node
         else
-            res.json 404, {error: "#{req.params.node_type} with id #{req.params.id} was not found"}
+            res.json 404, error: "#{req.params.node_type} with id #{req.params.id} was not found"
     
     app.delete '/:node_type/:id', (req, res) ->
         deleted = graph.delete_node(req.params.id)
         if deleted
-            res.json 204, {data: {} }
+            res.json 204, data: {} 
         else
-            res.json 404, {error: "#{req.params.node_type} with id #{req.params.id} was not found"}
+            res.json 404, error: "#{req.params.node_type} with id #{req.params.id} was not found"
     
     app.put '/:node_type/:id', (req, res) ->
         if validate(req.body, req.params.node_type, res)
-            console.log "validated #{req.body.name}"
             updated = graph.update_node(req.params.id, req.body, req.params.node_type)
             res.json data: updated
     
     app.get '/:node_type/:id/:edge_type', (req, res) ->
-        res.send "getting the #{req.params.edge_type}s of #{req.params.node_type} ##{req.params.id}!"
+        nodes = graph.get_edges(req.params.id, req.params.edge_type)
+
+        if nodes?
+            res.json data: nodes
+        else
+            res.json 404, error: "#{req.params.node_type} with id #{req.params.id} was not found"
         
+    app.post '/:node_type/:id/:edge_type', (req, res) ->
+        new_edge_node_id = req.body.id
+        if not new_edge_node_id?
+            return res.json 400, error: "Need to provide 'id' as body property"
+            
+        edges = graph.create_edge(req.params.id, req.params.edge_type, new_edge_node_id)
+        
+        if edges?
+            res.json data: edges
+        else
+            res.json 400, error: "Could not create new edge."
+        
+    app.delete '/:node_type/:actor/:edge_type/:subject', (req, res) ->
+        
+        deleted = graph.delete_edge(req.params.actor, req.params.edge_type, req.params.subject)
+        if deleted
+            res.json 204, data: {} 
+        else
+            res.json 404, error: "#{req.params.node_type} with id #{req.params.id} was not found"
+    
     # the root address should return the schema
     app.get '/', (req, res) ->
         res.json schema
@@ -80,7 +108,7 @@ create = (schema) ->
     app.all '*', (req, res) ->
         error_string = "Did not match #{req.route.method}: #{req.url}"
         console.log error_string
-        res.send 400, error_string
+        res.json 400, error: error_string
     
     return app
     
