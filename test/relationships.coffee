@@ -1,7 +1,7 @@
 request = require 'supertest'
 affinity = require '../affinity'
 expect = require('chai').expect
-api = require './api'
+affinity_api = require('./api').app
 
 describe 'Given a schema with a single one hop relationship(follows) ,', ->
     entities = 
@@ -11,6 +11,7 @@ describe 'Given a schema with a single one hop relationship(follows) ,', ->
             follows: "user->user"
 
     app = affinity.create entities
+    api = affinity_api app
     
     describe 'GETting who follows a non existent node', ->
         it 'should be a 404.', (done) ->
@@ -21,7 +22,7 @@ describe 'Given a schema with a single one hop relationship(follows) ,', ->
     describe 'and given a fresh node, ', ->
         describe 'GETting who follows that node with no followers', ->
             it 'should return an empty list.', (done) ->
-                api.node.create app, "user", (id) ->
+                api.node.create "user", {}, (id) ->
                     request(app)
                         .get("/user/#{id}/follows")
                         .end (err, res) ->
@@ -32,7 +33,7 @@ describe 'Given a schema with a single one hop relationship(follows) ,', ->
                             
         describe 'POSTting an edge to that node', ->
             it 'should return a list with that edge.', (done) ->
-                api.node.create app, "user", (id) ->
+                api.node.create "user", {}, (id) ->
                     request(app)
                         .post("/user/#{id}/follows")
                         .send(id:id) # follow self, TODO: toggle whether this is allowed.
@@ -47,7 +48,7 @@ describe 'Given a schema with a single one hop relationship(follows) ,', ->
                                     
         describe 'DELETEing an edge from a node', ->
             it 'should delete that edge!', (done) ->
-                api.node.create app, "user", (id) ->
+                api.node.create "user", {}, (id) ->
                     request(app)
                         .post("/user/#{id}/follows")
                         .send(id:id)

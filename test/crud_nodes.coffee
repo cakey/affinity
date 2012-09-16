@@ -1,6 +1,7 @@
 request = require 'supertest'
 affinity = require '../affinity'
 expect = require('chai').expect
+affinity_api = require('./api').app
 
 
 describe 'Given a one node schema,', ->
@@ -9,6 +10,7 @@ describe 'Given a one node schema,', ->
             "user": {}
 
     app = affinity.create entities
+    api = affinity_api app
     
     describe 'GETing /', ->
         it 'should return the affinity spec.', (done) ->
@@ -46,24 +48,16 @@ describe 'Given a one node schema,', ->
                     
     describe 'GETting a POSTed node,', ->
         it 'should succeed', (done) ->
-            request(app)
-                .post("/user")
-                .end (err, res) ->
-                    id = res.body.data.id
-                    request(app)
-                        .get("/user/#{id}")
-                        .expect(200, done)                        
+            api.node.create "user", {}, (id) ->
+                request(app)
+                    .get("/user/#{id}")
+                    .expect(200, done)                           
                     
     describe 'DELETEing a node,', ->
         it 'should work', (done) ->
-            request(app)
-                .post("/user")
-                .end (err, res) ->
-                    id = res.body.data.id
+            api.node.create "user", {}, (id) ->
+                api.node.delete "user", id, ->
                     request(app)
-                        .del("/user/#{id}")
-                        .end (err, res) ->  
-                            request(app)
-                                .get("/user/#{id}")
-                                .expect(404, done)      
+                        .get("/user/#{id}")
+                        .expect(404, done)      
         
