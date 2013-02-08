@@ -8,7 +8,9 @@ describe 'Given a schema with a single one hop relationship(follows) ,', ->
         nodes: 
             user: {}
         edges:
-            follows: "user->user"
+            follows: 
+                actor: 'user',
+                subject: 'user'
 
     app = affinity.create entities
     api = affinity_api app

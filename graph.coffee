@@ -3,6 +3,12 @@ exports.memory = ->
     nodes = {}
     edges = {}
     
+    node_type = (id) ->
+        if nodes[id]?
+            return nodes[id].node_type
+        else
+            return null
+
     create_node = (node_type, properties) ->
         new_id = uuid.v4()
         
@@ -71,6 +77,8 @@ exports.memory = ->
         return false
         
     return {
+        node_type: node_type,
+
         create_node: create_node,
         get_node: get_node,
         delete_node: delete_node,

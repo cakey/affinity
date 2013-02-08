@@ -27,7 +27,6 @@ create = (schema) ->
             res.json 400, "error": "non existent node type"
                     
     app.param 'edge_type', (req, res, next, edge_type) ->
-        console.log "checking edge type"
         if edge_type of schema.edges
             next()
         else
@@ -35,20 +34,40 @@ create = (schema) ->
             
     # ---
     
-    validate = (node, node_type, res) ->
+    validate_node = (node, node_type, res) ->
         for expected_property, details of schema.nodes[node_type]
             if not node? or expected_property not of node
                 res.json 400, error: "missing property: #{expected_property}"
                 return false
         return true
     
+    validate_edge = (actor_id, edge_type, subject_id, res) ->
+        actor_type = graph.node_type(actor_id)
+        subject_type = graph.node_type(subject_id)
+        
+        expected_actor = schema.edges[edge_type].actor
+        expected_subject = schema.edges[edge_type].subject
+
+        valid_actor = expected_actor == actor_type
+        valid_subject = expected_subject == subject_type
+
+        if not valid_actor
+            res.json 400, error: "Wrong actor node_type: expected: #{expected_actor}, instead got #{actor_type}"
+            return false
+
+        if not valid_subject
+            res.json 400, error: "Wrong subject node_type: expected: #{expected_subject}, instead got #{subject_type}"
+            return false
+
+        return true
+
     # ---
             
     app.get '/:node_type', (req, res) ->
         res.send "get all the #{req.params.node_type}s!"
         
     app.post '/:node_type', (req, res) ->
-        if validate(req.body, req.params.node_type, res)
+        if validate_node(req.body, req.params.node_type, res)
             node = graph.create_node(req.params.node_type, req.body)
             res.json data: node
 
@@ -69,7 +88,7 @@ create = (schema) ->
             res.json 404, error: "#{req.params.node_type} with id #{req.params.id} was not found"
     
     app.put '/:node_type/:id', (req, res) ->
-        if validate(req.body, req.params.node_type, res)
+        if validate_node(req.body, req.params.node_type, res)
             updated = graph.update_node(req.params.id, req.body, req.params.node_type)
             res.json data: updated
     
@@ -86,12 +105,17 @@ create = (schema) ->
         if not new_edge_node_id?
             return res.json 400, error: "Need to provide 'id' as body property"
             
-        edges = graph.create_edge(req.params.id, req.params.edge_type, new_edge_node_id)
-        
-        if edges?
-            res.json data: edges
-        else
-            res.json 400, error: "Could not create new edge."
+        # need to validate that the id correspons to a valid node type based
+        # on the schema
+
+        if validate_edge(req.params.id, req.params.edge_type, new_edge_node_id, res)
+
+            edges = graph.create_edge(req.params.id, req.params.edge_type, new_edge_node_id)
+            
+            if edges?
+                res.json data: edges
+            else
+                res.json 400, error: "Could not create new edge."
         
     app.delete '/:node_type/:actor/:edge_type/:subject', (req, res) ->
         
@@ -123,7 +147,7 @@ serve = (schema, port) ->
 if not module.parent
     affinity_spec_file = process.argv[2]
     if not affinity_spec_file.endsWith ".affinity"
-        affinity_spec_file += ".affinity"
+        affinit y_spec_file += ".affinity"
     fileContents = fs.readFileSync affinity_spec_file, 'utf8'
     schema = JSON.parse fileContents
     port = process.argv[3]
