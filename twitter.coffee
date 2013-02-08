@@ -9,18 +9,13 @@ entities =
             content:
                 type: "string"
     edges:
-        follows: [
-            "user",
-            "user"
-        ]
-        tweeted: [
-            "user",
-            "tweet"
-        ]
-        followed_tweets: [
-            "follows",
-            "tweeted"
-        ]
+        follows: 
+            actor: "user",
+            subject: "user"
         
+        tweeted: 
+            actor: "user",
+            subject: "tweet"
+       
         
 affinity.serve entities
