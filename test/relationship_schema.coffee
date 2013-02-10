@@ -22,18 +22,15 @@ describe 'Given a schema with a single one hop relationship(attending) between t
             it 'should return a list with that edge', (done) ->
                 api.node.create "user", {}, (user_id) ->
                     api.node.create "event", {}, (event_id) ->
-                        request(app)
-                            .post("/user/#{user_id}/attending")
-                            .send(id:event_id) 
-                            .end (err, res) ->
-                                request(app)
-                                    .get("/user/#{user_id}/attending")
-                                    .end (err, res) ->
-                                        expect(res.body).to.include.keys "data"
-                                        expect(res.body.data)
-                                            .to.be.an('array')
-                                            .that.deep.equals [event_id]
-                                        done()
+                        api.edge.create "attending", user_id, event_id, ->
+                            request(app)
+                                .get("/user/#{user_id}/attending")
+                                .end (err, res) ->
+                                    expect(res.body).to.include.keys "data"
+                                    expect(res.body.data)
+                                        .to.be.an('array')
+                                        .that.deep.equals [event_id]
+                                    done()
 
         describe 'POSTing an incorrect edge (wrong node types)', ->
             it 'should 400', (done) ->

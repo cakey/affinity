@@ -7,12 +7,19 @@ express = require 'express'
 fs = require 'fs'
 database = require('./graph').memory
 
+schema_util = require('./schema_util')
+
 String::endsWith = (str) -> @match(new RegExp "#{str}$")
 
 create = (schema) ->
     app = express()    
     graph = database()
     
+
+    # ---
+
+    app.schema = schema
+
     # config
     app.use(express.bodyParser());
     
@@ -21,7 +28,7 @@ create = (schema) ->
         res.send 500, 'Something broke!'
 
     app.param 'node_type', (req, res, next, node_type) ->
-        if node_type of schema.nodes
+        if node_type of schema.nodes or node_type == 'node'
             next()
         else
             res.json 400, "error": "non existent node type"
@@ -31,7 +38,7 @@ create = (schema) ->
             next()
         else
             res.send 400, "error": "non existent edge type"
-            
+          
     # ---
     
     validate_node = (node, node_type, res) ->
@@ -93,7 +100,15 @@ create = (schema) ->
             res.json data: updated
     
     app.get '/:node_type/:id/:edge_type', (req, res) ->
-        nodes = graph.get_edges(req.params.id, req.params.edge_type)
+        # as we allow compound edges, we need to leave
+        # traversal to the graph engine, otherwise we will get silly complexities
+
+        # find out what the traversal looks like based on our schema
+        edge_list = schema_util.expand_edge(req.params.edge_type, schema)
+
+        # then traverse
+        nodes = graph.traverse(req.params.id, edge_list)
+        #nodes = graph.get_edges(req.params.id, req.params.edge_type)
 
         if nodes?
             res.json data: nodes

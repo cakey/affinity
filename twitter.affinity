@@ -11,12 +11,12 @@
     },
     "edges": {
         "follows": {
-            actor: "user",
-            subject: "user"
+            "actor": "user",
+            "subject": "user"
         },
         "tweeted": {
-            actor: "user",
-            subject: "tweet"
+            "actor": "user",
+            "subject": "tweet"
         },
     }
 }

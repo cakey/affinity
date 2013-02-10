@@ -32,6 +32,9 @@ The schema takes the form of (where []'s should be replaced with the names of yo
         	"actor": [node_type_1]
         	"subject": [node_type_2],
         },
+        "[compound_edge_type]": {
+            "chain": [[edge_type1], [edge_type2]]
+        }
     }
 }
 
@@ -41,6 +44,8 @@ See twitter.affinity or twitter.coffee for more comprehensive examples.
  * Can CRD nodes
  
 === Planned ===
+ * swagger
+ * Validation that correct schema supplied
  * type checking/validation of properties
  * Emitters
  * Custom Urls?

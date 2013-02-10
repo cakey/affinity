@@ -45,6 +45,21 @@ exports.memory = ->
                 return properties
         return null
             
+    # traverse uses an edge_list, while get_edges uses a single edge_type
+
+    traverse = (id, edge_list) ->
+        current_nodes = [id]
+        for edge in edge_list
+            next_nodes = []
+            for node_id in current_nodes
+                new_nodes = get_edges(node_id, edge)
+                if new_nodes is null # error propogation (#fix)
+                    return null
+                for new_node in new_nodes # learn to extend
+                    next_nodes.push(new_node)
+            current_nodes = next_nodes
+        return current_nodes
+
     get_edges = (id, edge_type) ->
         if get_node(id)?
             if edges[id]?
@@ -86,5 +101,7 @@ exports.memory = ->
         
         get_edges: get_edges,
         create_edge: create_edge,
-        delete_edge: delete_edge
+        delete_edge: delete_edge,
+
+        traverse: traverse
     }
