@@ -1,6 +1,6 @@
 === Usage ===
 
-This project creates a REST api from a simple schema.
+This project declaratively creates a REST api from a simple schema.
 
 The idea is for there to be a canonical graph-like schema that describes your data, making it much clearer to anyone involved in the project what the data looks like.
 
@@ -42,6 +42,9 @@ See twitter.affinity or twitter.coffee for more comprehensive examples.
 
 === Features ===
  * Can CRD nodes
+ * can crud edges
+ * basic properties on nodes
+ * compound edges
  
 === Planned ===
  * swagger
