@@ -76,4 +76,4 @@ npm test
  * https://github.com/visionmedia/supertest
  * http://expressjs.com/api.html
  * https://npmjs.org/doc/scripts.html
- * http://visionmedia.github.com/mocha/
+ * http://mochajs.org/
